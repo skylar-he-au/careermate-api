@@ -1,32 +1,46 @@
-const UserModel = require("../models/user-model");
+const ConflictException = require("../../exceptions/conflict.exception");
+const UnauthorizedException = require("../../exceptions/forbidden.exception");
+const User = require("../models/user-model");
 const { generateToken } = require("../utils/jwt");
 
 const register = async (req, res, next) => {
-    const { username, password } = req.body;
-    // input validation
-    // conflicts
-    const user = new UserModel({ username, password });
+    const { fullName, email, password } = req.body;
+    const existingUser = await User.findOne({ email }).exec();
+    if (existingUser) {
+        throw new ConflictException('Email already exists!');
+    }
+    const user = await User.create({ fullName, email, password });
+
     await user.hashPassword();
-    await user.save();
+    const token = generateToken({ id: user.id, fullName: user.fullName })
 
-    const token = generateToken({id:user.id, username:user.username})
-    res.status(201).json(token);
+    res.status(201).json({
+        success: true,
+        data: {
+            user,
+        }
+    });
 };
-const login = async (req, res, next) => {
-    const { username, password } = req.body;
+const login = async (req, res) => {
+    const { email, password } = req.body;
 
-    const user = await UserModel.findOne({ username }).exec();
+    const user = await User.findOne({ email }).exec();
     if (!user) {
-        return res.status(401).json({ error: 'invalid credentials' });
+        throw new UnauthorizedException('Email and Password mismatch')
     }
     const validPassword = await user.validatePassword(password);
     if (!validPassword) {
-        return res.status(401).json({ error: 'invalid credentials' })
+        throw new UnauthorizedException('Invalid email ro password')
     }
 
-    const token = generateToken({id:user.id, username:user.username, role:'admin'})
+    const token = generateToken({ id: user.id, fullName: user.fullName, role: 'admin' })
 
-    res.json({token});
+    res.status(201).json({
+        success: true,
+        data: {
+            user,
+        }
+    });
 };
 
 module.exports = {

@@ -12,21 +12,32 @@ const createLogger = (filename) => {
         },
         format: winston.format.combine(
             winston.format.timestamp(),
-            winston.format.printf(({ timestamp, filename, level, message, payload }) => {
+            winston.format((meta)=>{
+                if(meta.req){
+                    meta.req={
+                        method:meta.req.method,
+                        url:meta.req.url,
+                    };
+                }
+                if(meta.err){
+                    meta.err={
+                        message:meta.err.message,
+                    };
+                }
+                return meta;
+            })(),
+            winston.format.printf(({ timestamp, filename, level, message, payload, ...meta }) => {
                 const fileInfo = filename ? ` [${filename}]` : '';
                 const payloadInfo = payload ? `\n${JSON.stringify(payload)}` : '';
-                return `[${timestamp}] [${level}]${fileInfo}: ${message}${payloadInfo}`;
+                let log =  `[${timestamp}] [${level}]${fileInfo}: ${message}${payloadInfo}`;
+                if(Object.keys(meta).length>0){
+                    log+=`${JSON.stringify(meta)}`;
+                }
+                return log;
             })
         ),
         transports: [
             new winston.transports.Console(),
-            new winston.transports.File({
-                filename: path.join(logDir, 'combined.log'),
-            }),
-            new winston.transports.File({
-                filename: path.join(logDir, 'error.log'),
-                level: 'error',
-            }),
         ],
     });
 };

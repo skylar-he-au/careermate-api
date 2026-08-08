@@ -2,14 +2,40 @@ const { Schema, model } = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const schema = new Schema({
-    username: {
+    email: {
         type: String,
         required: true,
         unique: true,
+        lowercase: true,
+        trim: true,
+    },
+    fullName: {
+        type: String,
+        required: true,
+        trim: true,
+    },
+    displayName: {
+        type: String,
+        trim: true,
     },
     password: {
         type: String,
         required: true,
+    },
+    role:{
+        type:String,
+        enum:['Student', 'Other']
+    },
+    field:{
+        type:String,
+        enum:["FE",'BE']
+    },
+    goal:{
+        type:String,
+        trim:true,
+    },
+    avatar:{
+        type:String,
     },
 });
 
@@ -21,6 +47,6 @@ schema.methods.validatePassword = async function (password) {
     return bcrypt.compare(password, this.password);
 };
 
-const UserModel = model("User", schema);
+const User = model("User", schema);
 
-module.exports = UserModel;
+module.exports = User;
