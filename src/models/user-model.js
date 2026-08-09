@@ -37,15 +37,23 @@ const schema = new Schema({
     avatar:{
         type:String,
     },
+},{
+    timestamps:true,
+    toJSON:{
+        transform(_, user){
+            delete user.password;
+            delete user.__v;
+        }
+    }
 });
 
-schema.methods.hashPassword = async function () {
-    this.password = await bcrypt.hash(this.password, 12);
-};
+// schema.methods.hashPassword = async function () {
+//     this.password = await bcrypt.hash(this.password, 12);
+// };
 
-schema.methods.validatePassword = async function (password) {
-    return bcrypt.compare(password, this.password);
-};
+// schema.methods.validatePassword = async function (password) {
+//     return bcrypt.compare(password, this.password);
+// };
 
 const User = model("User", schema);
 

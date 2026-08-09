@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken')
 const config = require('./config');
-const { token } = require('morgan');
 
 const secret = config.JWT_KEY;
 
@@ -9,14 +8,10 @@ const generateToken = (payload) => {
 };
 
 const validateToken = (token) => {
-    try {
-        return jwt.verify(token, secret);
-    } catch (e) {
-        return null;
-    }
+    return jwt.verify(token, secret);
 };
 
-module.exports ={
+module.exports = {
     generateToken,
     validateToken,
 }

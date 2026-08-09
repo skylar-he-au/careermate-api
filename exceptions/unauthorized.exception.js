@@ -1,7 +1,7 @@
 const AppException = require("./app.exception");
 
 class UnauthorizedException extends AppException{
-    constructor(message='Forbidden error', context={}){
+    constructor(message='Authorization error', context={}){
         super(401, message, context);
     }
 }

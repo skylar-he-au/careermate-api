@@ -1,24 +1,22 @@
+const UnauthorizedException = require("../../exceptions/unauthorized.exception");
 const { validateToken } = require("../utils/jwt");
 
-module.exports = (req, res ,next)=>{
+module.exports = (req, res, next) => {
     const authorization = req.header('Authorization');
-    if(!authorization){
-        res.status(401).json({error:'missing authorization token'});
-        return;
+    if (!authorization) {
+        throw new UnauthorizedException('Authentication required');
     };
-    const  [type, token] = authorization.split(' ');
-    if (type !== 'Bearer' || !token){
-        res.status(401).json({error:'invalid token'});
-        return;
+    const [type, token] = authorization.split(' ');
+    if (type !== 'Bearer' || !token) {
+        throw new UnauthorizedException('Authentication required');
     }
 
-    const payload = validateToken(token);
-    if(!payload){
-        res.status(401).json({error:'invalid token'});
-        return;
+    try {
+        const user = validateToken(token);
+        req.user = user;
+        next()
+    } catch (e) {
+        throw new UnauthorizedException('Invalid or expired token', { error: e });
     }
 
-    req.user = payload;
-
-    next();
 };

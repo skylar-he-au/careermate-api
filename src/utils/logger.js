@@ -12,20 +12,6 @@ const createLogger = (filename) => {
         },
         format: winston.format.combine(
             winston.format.timestamp(),
-            winston.format((meta)=>{
-                if(meta.req){
-                    meta.req={
-                        method:meta.req.method,
-                        url:meta.req.url,
-                    };
-                }
-                if(meta.err){
-                    meta.err={
-                        message:meta.err.message,
-                    };
-                }
-                return meta;
-            })(),
             winston.format.printf(({ timestamp, filename, level, message, payload, ...meta }) => {
                 const fileInfo = filename ? ` [${filename}]` : '';
                 const payloadInfo = payload ? `\n${JSON.stringify(payload)}` : '';

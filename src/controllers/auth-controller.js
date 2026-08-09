@@ -1,7 +1,8 @@
 const ConflictException = require("../../exceptions/conflict.exception");
-const UnauthorizedException = require("../../exceptions/forbidden.exception");
+const UnauthorizedException = require("../../exceptions/unauthorized.exception");
 const User = require("../models/user-model");
 const { generateToken } = require("../utils/jwt");
+const { comparePassword, hashPassword } = require("../utils/password");
 
 const register = async (req, res, next) => {
     const { fullName, email, password } = req.body;
@@ -9,10 +10,8 @@ const register = async (req, res, next) => {
     if (existingUser) {
         throw new ConflictException('Email already exists!');
     }
-    const user = await User.create({ fullName, email, password });
-
-    await user.hashPassword();
-    const token = generateToken({ id: user.id, fullName: user.fullName })
+    const hashedPassword = await hashPassword(password);
+    const user = await User.create({ fullName, email, password: hashedPassword });
 
     res.status(201).json({
         success: true,
@@ -28,17 +27,18 @@ const login = async (req, res) => {
     if (!user) {
         throw new UnauthorizedException('Email and Password mismatch')
     }
-    const validPassword = await user.validatePassword(password);
-    if (!validPassword) {
+    const isMAtched = await comparePassword(password, user.password);
+    if (!isMAtched) {
         throw new UnauthorizedException('Invalid email ro password')
     }
 
-    const token = generateToken({ id: user.id, fullName: user.fullName, role: 'admin' })
+    const token = generateToken({ id: user.id })
 
     res.status(201).json({
         success: true,
         data: {
             user,
+            token,
         }
     });
 };

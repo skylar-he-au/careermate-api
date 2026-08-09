@@ -25,7 +25,7 @@ const startApp = async () => {
     await connectToDb();
 
     app.listen(config.PORT, () => {
-        logger.info(`server listening on port ${config.PORT}`,{test:1});
+        logger.info(`server listening on port ${config.PORT}`);
     });
 };
 
