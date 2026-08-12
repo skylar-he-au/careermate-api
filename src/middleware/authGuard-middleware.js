@@ -1,4 +1,4 @@
-const UnauthorizedException = require("../../exceptions/unauthorized.exception");
+const UnauthorizedException = require("../exceptions/unauthorized.exception");
 const { validateToken } = require("../utils/jwt");
 
 module.exports = (req, res, next) => {

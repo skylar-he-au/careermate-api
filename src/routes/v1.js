@@ -2,11 +2,13 @@ const { Router } = require('express');
 const authRouter = require('./auth-router');
 const { public, private, adminPath } = require('../controllers/test-contrller');
 const authGuardMiddleware = require('../middleware/authGuard-middleware');
-const roleGuardMiddleware = require('../middleware/roleGuard-Middleware')
+const roleGuardMiddleware = require('../middleware/roleGuard-Middleware');
+const userRouter = require('./user-router');
 
 const v1Router = Router();
 
 v1Router.use('/auth', authRouter);
+v1Router.use('/users', authGuardMiddleware, userRouter);
 
 v1Router.get('/public', public);
 v1Router.get('/private', authGuardMiddleware, private);
