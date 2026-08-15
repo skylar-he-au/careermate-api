@@ -24,7 +24,7 @@ const presignedUploadSchema = z.object({
     fileName:z.string().trim().min(1),
     contentType:z.string().trim().min(1),
     category:z.enum(CATEGORIES),
-    filesize:z.number().int().positive(),
+    fileSize:z.number().int().positive(),
 })
 
 module.exports = {

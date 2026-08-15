@@ -13,15 +13,15 @@ const s3Client = new S3Client({
 });
 
 const generatePresignedUploadUrl = async (fileKey, contentType, fileSize) => {
-    const command = new PutObjectAclCommand({
+    const command = new PutObjectCommand({
         Bucket: config.S3_BUCKET,
-        key: fileKey,
+        Key: fileKey,
         ContentType: contentType,
-        ContentLenght: fileSize,
+        ContentLength: fileSize,
     });
     return getSignedUrl(s3Client, command, {
         expiresin: UPLOAD_URL_EXPIRES_IN,
-        signableHeaders: new Set(['content-type', 'content-lenght']),
+        signableHeaders: new Set(['content-type', 'content-length']),
     });
 };
 
@@ -74,7 +74,7 @@ const validateS3File = async(fileKey, {allowedTypes, maxFileSize})=>{
         }
         throw e;
     }
-    if (!allowedTypes.include(head.ContentType)){
+    if (!allowedTypes.includes(head.ContentType)){
         throw new BadRequestException(
             `File type ${head.ContentType} is not allowed, allowed types are: ${allowedTypes.join(', ')}.`,
         );

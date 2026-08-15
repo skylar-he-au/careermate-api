@@ -1,7 +1,7 @@
 const { success } = require("zod");
 const ForbiddenException = require("../exceptions/forbidden.exception");
 const Resume = require("../models/resume.model");
-const { ALLOWED_TYPES, MAX_FILE_SIZE } = require("../upload/upload.validation");
+const { ALLOWED_TYPES, MAX_FILE_SIZE } = require("../validation/upload.validation");
 const { validateS3File, copyObject, deleteObject, generatePresignedGetUrl, DOWNLOAD_URL_EXPIRES_IN } = require("../utils/s3");
 const NotFoundException = require("../exceptions/NotFound.exception");
 
@@ -41,7 +41,7 @@ const getResumes = async (req, res) => {
     const userId = req.user.id
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) + limit;
+    const skip = (page - 1) * limit;
 
     const [resumes, total] = await Promise.all([
         Resume.find({ user: userId })
@@ -62,24 +62,24 @@ const getResumes = async (req, res) => {
     });
 };
 
-const findOwnResume = async (req, res) => {
+const findOwnResume = async (resumeId, userId) => {
     const resume = await Resume.findById(resumeId);
-    if(!resume){
+    if (!resume) {
         throw new NotFoundException('Resume not found');
     }
-    if (resume.user.toString() !== userId){
+    if (resume.user.toString() !== userId) {
         throw new ForbiddenException('Missing access permission')
     }
     return resume;
 };
 
-const downlaodResume = async (req, res) => {
+const downloadResume = async (req, res) => {
     const resume = await findOwnResume(req.params.id, req.user.id);
 
     const downlaodUrl = await generatePresignedGetUrl(
-        resume.findKey,
+        resume.fileKey,
         resume.fileName,
-    ); 
+    );
 
     res.json({
         success: true,
@@ -91,7 +91,7 @@ const downlaodResume = async (req, res) => {
     });
 };
 
-const deleteRusume = async(req,res)=>{
+const deleteResume = async (req, res) => {
     const resume = await findOwnResume(req.params.id, req.user.id);
 
     await deleteObject(resume.fileKey);
@@ -103,6 +103,6 @@ const deleteRusume = async(req,res)=>{
 module.exports = {
     getResumes,
     createResume,
-    downlaodResume,
-    deleteRusume,
+    downloadResume,
+    deleteResume,
 };

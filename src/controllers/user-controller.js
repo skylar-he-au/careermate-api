@@ -6,7 +6,8 @@ const { success } = require('zod');
 const { MAX_PASSWORD_HISTORY } = require('../utils/constant');
 const ForbiddenException = require('../exceptions/forbidden.exception');
 const { comparePassword, hashPassword } = require('../utils/password');
-const { deleteObject } = require('../utils/s3');
+const { deleteObject, copyObject, validateS3File } = require('../utils/s3');
+const { ALLOWED_TYPES, MAX_FILE_SIZE } = require('../validation/upload.validation');
 
 const getMe = async (req, res) => {
     const userId = req.user.id;
@@ -79,8 +80,8 @@ const updateAvatar = async (req,res)=>{
     }
 
     const head = await validateS3File(tmpKey, {
-        allowedTypes: ALLOWED_TYPES.resume,
-        maxFileSize: MAX_FILE_SIZE.resume,
+        allowedTypes: ALLOWED_TYPES.avatar,
+        maxFileSize: MAX_FILE_SIZE.avatar,
     });
 
     // filename from the filekey

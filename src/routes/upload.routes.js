@@ -1,8 +1,8 @@
 const { Router } = require('express');
-const { presignedUploadSchema } = require('./upload.validation');
+const { presignedUploadSchema } = require('../validation/upload.validation');
 const { validateBody } = require('../middleware/validation.middleware');
-const { getPresignedUploadUrl } = require('./upload.controller');
-const uploadRateLimiter = require('./upload.middleware');
+const { getPresignedUploadUrl } = require('../controllers/upload.controller');
+const uploadRateLimiter = require('../middleware/upload.middleware');
 
 const uploadRouter = Router();
 
