@@ -10,11 +10,13 @@ const optionalConfigs = {
     LOG_LEVEL: process.env.LOG_LEVEL || 'info',
     RATE_LIMIT_WINDOW_MS: process.env.RATE_LIMIT_WINDOW_MS||15*60*1000,
     RATE_LIMIT_LIMIT: process.env.RATE_LIMIT_LIMIT||100,
+    AWS_REGION:process.env.AWS_REGION||'ap-southeast-2',
 }
  
 const requiredConfigs = {
     DB_CONNECTION_STRING: process.env.DB_CONNECTION_STRING,
-    JWT_KEY: process.env.JWT_KEY
+    JWT_KEY: process.env.JWT_KEY,
+    S3_BUCKET:process.env.S3_BUCKET,
 }
 
 for (const key in requiredConfigs) {
