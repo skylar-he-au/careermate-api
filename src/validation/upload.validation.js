@@ -1,4 +1,4 @@
-const {z} = require('zod')
+const { z } = require('zod')
 const CATEGORIES = ['avatar', 'resume'];
 const ALLOWED_TYPES = {
     avatar: ['image/jpeg', 'image/png', 'image/webp'],
@@ -11,20 +11,20 @@ const MAX_FILE_SIZE = {
 };
 
 const EXTENSION_MAP = {
-    'image/jpeg':'.jpg',
-    'image/png':'.png',
-    'image/webp':'.webp',
-    'application/pdf':'.pdf',
+    'image/jpeg': '.jpg',
+    'image/png': '.png',
+    'image/webp': '.webp',
+    'application/pdf': '.pdf',
 };
 
-const TMP_KEY_PATTERN = /^tmp\/[a-f0-9]{24}\/+ $/;
-const KEY_PATTERN = /^(avatar|resume)\/[a-f0-9]{24}\/+ $/;
+const KEY_PATTERN = /^(avatar|resume)\/[a-f0-9]{24}\/[^/]+$/;
+const TMP_KEY_PATTERN = /^tmp\/[a-f0-9]{24}\/[^/]+$/;
 
 const presignedUploadSchema = z.object({
-    fileName:z.string().trim().min(1),
-    contentType:z.string().trim().min(1),
-    category:z.enum(CATEGORIES),
-    fileSize:z.number().int().positive(),
+    fileName: z.string().trim().min(1),
+    contentType: z.string().trim().min(1),
+    category: z.enum(CATEGORIES),
+    fileSize: z.number().int().positive(),
 })
 
 module.exports = {

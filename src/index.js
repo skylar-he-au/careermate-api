@@ -1,32 +1,43 @@
+const { default: mongoose } = require('mongoose');
+const app = require('./app');
 const config = require('./utils/config');
-const cors = require('cors');
-const helmet = require('helmet')
-const express = require('express');
-const v1Router = require('./routes/v1');
-const { logger } = require('./utils/logger');
-const morganMiddleware = require('./middleware/morgan-middleware');
-const rateLimiter = require('./middleware/rateLimite-middleware');
 const connectToDb = require('./utils/db');
-const errorHundler = require('./middleware/error/error.middleware');
+const { logger } = require('./utils/logger');
 
-const app = express();
-
-app.use(helmet());
-app.use(cors());
-app.use(morganMiddleware);
-app.use(rateLimiter);
-app.use(express.json());
-
-app.use('/v1', v1Router);
-
-app.use(errorHundler);
+const SHUTDOWN_TIMEOUT = 10 * 1000;
 
 const startApp = async () => {
     await connectToDb();
 
-    app.listen(config.PORT, () => {
+    const server = app.listen(config.PORT, () => {
         logger.info(`server listening on port ${config.PORT}`);
     });
+
+    const shutdown = (signal) => {
+        logger.info(`${signal} received, shutting down now`);
+        server.close(() => {
+            mongoose.connection.close().then(() => {
+                logger.info('DB connection closed');
+                process.exit(0);
+            });
+        });
+
+        setTimeout(() => {
+            logger.error('Shutdown failed');
+            process.exit(1);
+        }, SHUTDOWN_TIMEOUT);
+    };
+
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('SIGINT', () => shutdown('SIGINT'));
+    process.on('unhandledRejection', (err) => {
+        logger.error('Unhandled rejection', { err });
+        process.exit(1);
+    })
+    process.on('uncaughtException', (err) => {
+        logger.error('Unhandled exception', { err });
+        process.exit(1);
+    })
 };
 
 startApp();

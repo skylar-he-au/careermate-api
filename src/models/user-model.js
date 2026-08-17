@@ -1,6 +1,7 @@
 const { Schema, model } = require('mongoose');
 const bcrypt = require('bcryptjs');
-const { string } = require('zod');
+const { string} = require('zod');
+const config = require('../utils/config');
 
 const schema = new Schema({
     email: {
@@ -64,6 +65,7 @@ const schema = new Schema({
     },
 }, {
     timestamps: true,
+    virtuals:true,
     toJSON: {
         transform(_, user) {
             delete user.password;
@@ -73,6 +75,13 @@ const schema = new Schema({
         }
     }
 });
+
+schema.virtual('avatarUrl').get(function(){
+    if (!this.avatar || !config.CLOUDFRONT_DOMAIN){
+        return null;
+    }
+    return`https://${config.CLOUDFRONT_DOMAIN}/${this.avatar}`;
+})
 
 // schema.methods.hashPassword = async function () {
 //     this.password = await bcrypt.hash(this.password, 12);
