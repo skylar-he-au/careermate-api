@@ -5,6 +5,7 @@ const { logger } = require('../utils/logger');
 const { success } = require('zod');
 const { MAX_PASSWORD_HISTORY } = require('../utils/constant');
 const ForbiddenException = require('../exceptions/forbidden.exception');
+const UnauthorizedException = require('../exceptions/unauthorized.exception');
 const { comparePassword, hashPassword } = require('../utils/password');
 const { deleteObject, copyObject, validateS3File } = require('../utils/s3');
 const { ALLOWED_TYPES, MAX_FILE_SIZE } = require('../validation/upload.validation');

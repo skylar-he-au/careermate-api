@@ -1,8 +1,8 @@
-const public = (req, res) => {
+const publicPath = (req, res) => {
     res.json('hello from public');
 };
 
-const private = (req, res) => {
+const privatePath = (req, res) => {
     res.json('hello from private');
 };
 
@@ -11,7 +11,7 @@ const adminPath = (req, res) => {
 };
 
 module.exports = {
-    public,
-    private,
+    publicPath,
+    privatePath,
     adminPath,
 }

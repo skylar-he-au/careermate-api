@@ -1,4 +1,11 @@
-const { S3Client, PutObjectAclCommand, GetObject$, GetObjectCommand, HeadObjectCommand, DeleteObjectCommand, CopyObjectCommand } = require('@aws-sdk/client-s3');
+const {
+    S3Client,
+    PutObjectCommand,
+    GetObjectCommand,
+    HeadObjectCommand,
+    DeleteObjectCommand,
+    CopyObjectCommand,
+} = require('@aws-sdk/client-s3');
 const config = require('./config');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const NotFoundException = require('../exceptions/NotFound.exception');
@@ -20,7 +27,7 @@ const generatePresignedUploadUrl = async (fileKey, contentType, fileSize) => {
         ContentLength: fileSize,
     });
     return getSignedUrl(s3Client, command, {
-        expiresin: UPLOAD_URL_EXPIRES_IN,
+        expiresIn: UPLOAD_URL_EXPIRES_IN,
         signableHeaders: new Set(['content-type', 'content-length']),
     });
 };

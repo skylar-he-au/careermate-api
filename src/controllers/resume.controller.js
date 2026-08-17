@@ -76,7 +76,7 @@ const findOwnResume = async (resumeId, userId) => {
 const downloadResume = async (req, res) => {
     const resume = await findOwnResume(req.params.id, req.user.id);
 
-    const downlaodUrl = await generatePresignedGetUrl(
+    const downloadUrl = await generatePresignedGetUrl(
         resume.fileKey,
         resume.fileName,
     );
@@ -84,7 +84,7 @@ const downloadResume = async (req, res) => {
     res.json({
         success: true,
         data: {
-            downlaodUrl,
+            downloadUrl,
             fileName: resume.fileName,
             expiresIn: DOWNLOAD_URL_EXPIRES_IN,
         },
