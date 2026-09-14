@@ -17,7 +17,7 @@ The frontend lives in a separate repository: https://github.com/skylar-he-au/car
 | File storage | AWS SDK v3 (`@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner`) |
 | Logging | winston (console transport), morgan (HTTP access log) |
 | Tests | Jest 30, supertest |
-| Hosting | AWS Elastic Beanstalk (`Procfile`: `web: npm start`) |
+| Deployment config | AWS Elastic Beanstalk (`Procfile`, `.elasticbeanstalk/config.yml`). Not deployed yet, see [Deployment](#deployment) |
 
 ## Getting started
 
@@ -44,7 +44,7 @@ The server listens on `PORT` (default `3000`). `GET /health` returns `{ "status"
 | Script | What it does |
 | --- | --- |
 | `npm run dev` | Start with nodemon, `NODE_ENV=development` |
-| `npm start` | Start with `NODE_ENV=production` (used by Elastic Beanstalk) |
+| `npm start` | Start with `NODE_ENV=production` (this is what the `Procfile` runs) |
 | `npm run debug` | Start with `node --inspect` |
 | `npm test` | Run all Jest suites |
 | `npm run test:unit` / `npm run test:integration` | Run one test folder |
@@ -59,14 +59,14 @@ All variables are read in [`src/utils/config.js`](src/utils/config.js) unless no
 | `DB_CONNECTION_STRING` | yes | – | MongoDB connection URI |
 | `JWT_KEY` | yes | – | Secret used to sign and verify JWTs |
 | `S3_BUCKET` | yes | – | Bucket for temporary uploads, resumes and avatars |
-| `PORT` | no | `3000` | Elastic Beanstalk sets this for you |
+| `PORT` | no | `3000` | On Elastic Beanstalk the platform sets this |
 | `NODE_ENV` | no | `development` | Set by the npm scripts. Rate limiting only runs when this is `production` |
 | `LOG_LEVEL` | no | `info` | winston log level |
 | `AWS_REGION` | no | `ap-southeast-2` | Region for the S3 client |
 | `CLOUDFRONT_DOMAIN` | no | – | Domain used to build `avatarUrl`. Without it, `avatarUrl` is `null` |
 | `RATE_LIMIT_WINDOW_MS` | no | `900000` (15 min) | See Known limits: setting it through env currently fails validation |
 | `RATE_LIMIT_LIMIT` | no | `100` | Requests per window per IP |
-| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | local only | – | **Not** read by `config.js`. The AWS SDK default credential chain picks them up. Prefer an instance profile on Elastic Beanstalk |
+| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | local only | – | **Not** read by `config.js`. The AWS SDK default credential chain picks them up. When running on AWS, prefer an instance profile role |
 
 If `DB_CONNECTION_STRING`, `JWT_KEY` or `S3_BUCKET` is missing, the app throws at startup.
 
@@ -198,23 +198,43 @@ Models, S3, password hashing and the logger are mocked.
 - Nothing runs against a real MongoDB or S3 (for example with mongodb-memory-server or LocalStack). Mongoose query behaviour, unique indexes and real S3 permissions are untested.
 - There is no CI configuration in the repo, so tests only run when someone runs them locally.
 
-## Deployment (AWS Elastic Beanstalk)
+## Deployment
 
-The app runs on the Elastic Beanstalk Node.js platform:
+**Status: not deployed.** The repo includes deployment configuration for AWS Elastic Beanstalk, but there is currently no live environment running this API.
 
-- `Procfile` runs `npm start`, which sets `NODE_ENV=production`. That enables the rate limiters and the `combined` morgan format.
-- `.elasticbeanstalk/config.yml` only contains `global.profile: null`. The application and environment names are not committed, so run `eb init` on a new machine first.
-- Set `DB_CONNECTION_STRING`, `JWT_KEY`, `S3_BUCKET` and any optional variables as environment properties, either in the console or with `eb setenv KEY=value …`.
-  EB sets `PORT` itself.
-- Give the instance profile role access to the S3 bucket instead of setting `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`.
-- Point the environment health check at `/health`.
-- `app.set('trust proxy', 1)` trusts exactly one proxy hop. That is correct behind the EB nginx proxy on a single instance.
-  Re-check it if a load balancer is added (see Known limits).
-- Logs go to stdout only, so they end up in the EB instance logs (`web.stdout.log`).
+### What the repo contains
+
+- `Procfile`: `web: npm start`. `npm start` sets `NODE_ENV=production`, which enables the rate limiters and the `combined` morgan format.
+- `.elasticbeanstalk/config.yml`: only `global.profile: null`. No application name, environment name or region is committed.
+
+### Before a first deployment
+
+- **Check startup on Linux.** Until commit `5f2e913`, `src/routes/v1.js` and `src/routes/user.routes.js` imported `roleGuard-Middleware`, but the file is named `roleGuard-middleware.js`.
+  macOS resolves that anyway. A case-sensitive filesystem such as Linux fails at startup with `MODULE_NOT_FOUND`.
+  The import is fixed, but the fix has not been verified on Linux yet, so start the app in a Linux environment (for example a Docker container) first.
+- **Pass the required variables when you create the environment.** `config.js` throws at startup if `DB_CONNECTION_STRING`, `JWT_KEY` or `S3_BUCKET` is missing, so without them the first deploy will not start.
+- **Grant S3 access through the instance profile.** Give the instance profile role access to the S3 bucket instead of setting `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`.
+- **Allow browser uploads.** The bucket's CORS configuration must allow `PUT` from the frontend origin.
+
+### Deploying with the EB CLI
 
 ```bash
-eb deploy
+eb init
 ```
+
+Choose the Node.js platform (Node.js 20.19 or later) and a region. The S3 client defaults to `ap-southeast-2`.
+
+```bash
+eb create <environment-name> --envvars DB_CONNECTION_STRING=...,JWT_KEY=...,S3_BUCKET=...
+```
+
+After the environment exists:
+
+- Change variables with `eb setenv KEY=value …`. The platform sets `PORT` itself.
+- Point the environment health check at `/health`.
+- Ship later updates with `eb deploy`.
+- `app.set('trust proxy', 1)` trusts exactly one proxy hop. That is correct behind the EB nginx proxy on a single instance. Re-check it if a load balancer is added (see Known limits).
+- Logs go to stdout only, so on Elastic Beanstalk they end up in the instance logs (`web.stdout.log`).
 
 ## Known limits
 
@@ -271,11 +291,11 @@ eb deploy
   express-rate-limit rejects a string `windowMs` (`ERR_ERL_WINDOW_MS`). Leave them unset until `config.js` casts them.
 - **Rate limiting is basic.**
   - It only runs when `NODE_ENV=production`.
-  - It uses the default in-memory store, so counters are per instance, reset on restart, and are not shared when EB scales out.
+  - It uses the default in-memory store, so counters are per instance, reset on restart, and would not be shared across multiple instances.
   - Limits are per IP, not per user.
-- **Proxy trust is fixed at one hop.** `trust proxy` is `1`. With a load balancer in front of the EB nginx proxy there are two hops, and `req.ip` may be the load balancer's address. All clients would then share one rate-limit bucket.
+- **Proxy trust is fixed at one hop.** `trust proxy` is `1`. If the app is deployed behind a load balancer and the EB nginx proxy, there are two hops, and `req.ip` may be the load balancer's address. All clients would then share one rate-limit bucket.
 - **CORS is open.** `cors()` runs with its defaults, which allow every origin.
-- **Demo routes ship to production.** `/v1/public`, `/v1/private` and `/v1/admin` are mounted in every environment.
+- **Demo routes are not gated by environment.** `/v1/public`, `/v1/private` and `/v1/admin` are mounted whatever `NODE_ENV` is, so they would ship with any production deployment.
 - **No API docs are served.** `src/utils/swagger.js` configures swagger-jsdoc (still titled "Movie API"), but nothing mounts it. `swagger-ui-express` is an unused dependency, and the controllers have no JSDoc annotations.
 - **`/health` does not check MongoDB or S3.**
 - **Logging.** Logs go to the console only. `logger.js` computes a `logs/` directory but never uses it.
