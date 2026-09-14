@@ -14,7 +14,7 @@ jest.mock('../../src/utils/logger', () => ({
 
 const User = require('../../src/models/user-model');
 const s3 = require('../../src/utils/s3');
-const { updateAvatar } = require('../../src/controllers/user-controller');
+const { updateAvatar } = require('../../src/controllers/user.controller');
 
 const userId = '64f123456789abcdef123456';
 

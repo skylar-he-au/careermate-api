@@ -25,7 +25,7 @@ const {
     forgotPassword,
     verifyCode,
     resetPassword,
-} = require('../../src/controllers/auth-controller');
+} = require('../../src/controllers/auth.controller');
 
 const createResponse = () => ({
     status: jest.fn().mockReturnThis(),

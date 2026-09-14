@@ -4,9 +4,9 @@ const express = require('express');
 const v1Router = require('./routes/v1');
 const { logger } = require('./utils/logger');
 const morganMiddleware = require('./middleware/morgan-middleware');
-const rateLimiter = require('./middleware/rateLimite-middleware');
+const rateLimiter = require('./middleware/rateLimit-middleware');
 const connectToDb = require('./utils/db');
-const errorHundler = require('./middleware/error/error.middleware');
+const errorHandler = require('./middleware/error/error.middleware');
 
 const app = express();
 
@@ -29,6 +29,6 @@ app.use(express.json());
 
 app.use('/v1', v1Router);
 
-app.use(errorHundler);
+app.use(errorHandler);
 
 module.exports = app;

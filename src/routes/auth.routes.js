@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const { register, login, forgotPassword, verifyCode, resetPassword } = require('../controllers/auth-controller');
+const { register, login, forgotPassword, verifyCode, resetPassword } = require('../controllers/auth.controller');
 const { validateBody } = require('../middleware/validation.middleware');
 const { registerSchema, loginSchema, forgotPasswordSchema, verifyCodeSchema, resetPasswordSchema } = require('../validation/auth.validation');
 const authGuardMiddleware = require('../middleware/authGuard-middleware');

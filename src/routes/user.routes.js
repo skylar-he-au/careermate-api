@@ -1,6 +1,6 @@
 const express = require('express');
-const { deleteUser, restoreUser, getMe, updateMe, updateMyPassword, updateAvatar } = require('../controllers/user-controller');
-const roleGuardMiddleware = require('../middleware/roleGuard-Middleware');
+const { deleteUser, restoreUser, getMe, updateMe, updateMyPassword, updateAvatar } = require('../controllers/user.controller');
+const roleGuardMiddleware = require('../middleware/roleGuard-middleware');
 const { validateBody } = require('../middleware/validation.middleware');
 const { updateMeSchema, updateMyPasswordSchema, updateAvatarSchema } = require('../validation/user.validation');
 

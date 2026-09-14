@@ -1,4 +1,3 @@
-const { success } = require("zod");
 const ForbiddenException = require("../exceptions/forbidden.exception");
 const Resume = require("../models/resume.model");
 const { ALLOWED_TYPES, MAX_FILE_SIZE } = require("../validation/upload.validation");

@@ -1,9 +1,9 @@
 const { Router } = require('express');
-const authRouter = require('./auth-router');
-const { publicPath, privatePath, adminPath } = require('../controllers/test-contrller');
+const authRouter = require('./auth.routes');
+const { publicPath, privatePath, adminPath } = require('../controllers/test.controller');
 const authGuardMiddleware = require('../middleware/authGuard-middleware');
-const roleGuardMiddleware = require('../middleware/roleGuard-Middleware');
-const userRouter = require('./user-router');
+const roleGuardMiddleware = require('../middleware/roleGuard-middleware');
+const userRouter = require('./user.routes');
 const uploadRouter = require('./upload.routes');
 const resumeRouter = require('./resume.routes');
 

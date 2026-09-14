@@ -1,6 +1,6 @@
 const { logger } = require("../../utils/logger");
 
-const errorHundler = (err, req, res, next) => {
+const errorHandler = (err, req, res, next) => {
     const status = err.status || 500;
     const message = err.message || 'Something unexpected happened';
 
@@ -24,4 +24,4 @@ const errorHundler = (err, req, res, next) => {
     })
 };
 
-module.exports = errorHundler;
+module.exports = errorHandler;
